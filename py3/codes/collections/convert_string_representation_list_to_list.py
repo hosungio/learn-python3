@@ -23,3 +23,8 @@ try:
     print(x_list, type(x_list))
 except Exception as ex:
     print(ex)
+
+
+x = '["foo",44,"2020-01-02",176.8,67.8]'
+x_list = ast.literal_eval(x)
+print(x_list, [type(e) for e in x_list])
