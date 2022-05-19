@@ -5,13 +5,14 @@ from sqlalchemy import create_engine, inspect, func
 from sqlalchemy.orm import scoped_session, sessionmaker, Query
 from sqlalchemy.orm.session import Session
 
-from .schema import Person, JsonDoc
+from .schema import Person, PersonJsonDoc
 from .settings import get_app_settings
 
 
 class MariadbRepository:
     def __init__(self) -> None:
         self._settings = get_app_settings()
+        self._orm_list = [Person, PersonJsonDoc]
         self._engine = None
         self._inspect = None
         self._session = None
@@ -33,10 +34,11 @@ class MariadbRepository:
                 sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
             )
             logger.debug("Check and create tables")
-            if not self._inspect.has_table(Person.__tablename__):
-                Person.__table__.create(bind=self._engine)
-            if not self._inspect.has_table(JsonDoc.__tablename__):
-                JsonDoc.__table__.create(bind=self._engine)
+            for orm_class in self._orm_list:
+                if not self._inspect.has_table(orm_class.__tablename__):
+                    logger.debug(f"Creating table: name={orm_class.__tablename__}")
+                    orm_class.__table__.create(bind=self._engine)
+                    logger.debug(f"Table created: name={orm_class.__tablename__}")
 
     def close_db_connection(self) -> None:
         if self._engine:
@@ -77,7 +79,7 @@ class MariadbRepository:
                 sess.rollback()
         return count
 
-    def add_docs(self, docs: list[JsonDoc]) -> None:
+    def add_docs(self, docs: list[PersonJsonDoc]) -> None:
         sess: Session = None
         with self._session() as sess:
             try:
@@ -87,11 +89,11 @@ class MariadbRepository:
                 sess.rollback()
                 raise ex
 
-    def get_all_docs(self) -> list[JsonDoc]:
+    def get_all_docs(self) -> list[PersonJsonDoc]:
         founds = []
         sess: Session = None
         with self._session() as sess:
-            q: Query = sess.query(JsonDoc)
+            q: Query = sess.query(PersonJsonDoc)
             founds = q.all()
         return founds
 
@@ -100,7 +102,7 @@ class MariadbRepository:
         sess: Session = None
         with self._session() as sess:
             try:
-                q: Query = sess.query(JsonDoc)
+                q: Query = sess.query(PersonJsonDoc)
                 count = q.delete()
                 sess.commit()
             except Exception as ex:
@@ -141,7 +143,9 @@ class MariadbRepository:
         record_list = []
         sess: Session = None
         with self._session() as sess:
-            extract_fns = [func.json_extract(JsonDoc.doc, path) for path in path_list]
+            extract_fns = [
+                func.json_extract(PersonJsonDoc.doc, path) for path in path_list
+            ]
             q: Query = sess.query(*extract_fns)
             rows = q.all()
             for r in rows:
@@ -187,89 +191,3 @@ class MariadbRepository:
         +--------------------------+---------------------------+`
         """
         pass
-
-    # def extract_field_from_json(self, path: str) -> Tuple[str, list[Any]]:
-    #     """
-    #     > select json_extract(doc, '$.name') from test_json_doc;
-    #     +-----------------------------+
-    #     | json_extract(doc, '$.name') |
-    #     +-----------------------------+
-    #     | "foo"                       |
-    #     | "bar"                       |
-    #     | "zoo"                       |
-    #     +-----------------------------+
-    #     """
-
-    #     key = path[2:]
-    #     values = []
-    #     sess: Session = None
-    #     with self._session() as sess:
-    #         q: Query = sess.query(func.json_extract(JsonDoc.doc, path))
-    #         rows: list[Row] = q.all()
-    #         for r in rows:
-    #             r_val = r[0]
-    #             logger.debug(f"r_val: {type(r_val)}, [{r_val}]")
-    #             values.append(r_val)
-    #     return (key, values)
-
-    # def extract_fields_from_json(
-    #     self, *paths: str
-    # ) -> Tuple[list[str], list[list[Any]]]:
-    #     """
-    #     > select json_extract(doc, '$.name', '$.age') from test_json_doc;
-    #     +--------------------------------------+
-    #     | json_extract(doc, '$.name', '$.age') |
-    #     +--------------------------------------+
-    #     | ["foo", 44]                          |
-    #     | ["bar", 55]                          |
-    #     | ["zoo", 66]                          |
-    #     +--------------------------------------+
-
-    #     > select json_extract(doc, '$.name'), json_extract(doc, '$.age') from test_json_doc;
-    #     +-----------------------------+----------------------------+
-    #     | json_extract(doc, '$.name') | json_extract(doc, '$.age') |
-    #     +-----------------------------+----------------------------+
-    #     | "foo"                       | 44                         |
-    #     | "bar"                       | 55                         |
-    #     | "zoo"                       | 66                         |
-    #     +-----------------------------+----------------------------+
-
-    #     """
-
-    #     keys = [p[2:] for p in paths]
-    #     record_list = []
-    #     sess: Session = None
-    #     with self._session() as sess:
-    #         q: Query = sess.query(func.json_extract(JsonDoc.doc, *paths))
-    #         rows: list[Row] = q.all()
-    #         for r in rows:
-    #             r_val = r[0]
-    #             logger.debug(f"r_val: {type(r_val)}, [{r_val}]")
-    #             record_list.append(json.loads(r_val))
-    #     return (keys, record_list)
-
-    # def exec_sql(self, sql_text: str):
-    #     results = None
-    #     sess: Session = None
-    #     with self._session() as sess:
-    #         results = sess.execute(sql_text).fetchall()
-    #     return results
-
-    # def exec_json_extract(
-    #     self, table_name: str, json_column_name: str, json_path_list: list[str]
-    # ) -> Tuple[list[str], list[list[Any]]]:
-    #     json_path_expr = str(json_path_list)[1:-1]
-    #     sql_text = f"select json_extract({json_column_name}, {json_path_expr}) from {table_name}"
-    #     logger.debug(f"json_path_expr: {json_path_expr}")
-    #     logger.debug(f"sql_text: {sql_text}")
-
-    #     keys = [p[2:] for p in json_path_list]
-    #     sess: Session = None
-    #     record_list = []
-    #     with self._session() as sess:
-    #         rows = sess.execute(sql_text).fetchall()
-    #         for r in rows:
-    #             r_val = r[0]
-    #             logger.debug(f"r_val: {type(r_val)}, [{r_val}]")
-    #             record_list.append(json.loads(r_val))
-    #     return (keys, record_list)
