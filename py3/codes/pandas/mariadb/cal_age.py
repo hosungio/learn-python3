@@ -14,6 +14,12 @@ def cal_age_group_from_age(age_series):
     return age_group
 
 
+cal_age_from_birth_date_code = """
+def cal_age_from_birth_date(datetime_series):
+    today = datetime.now()
+    return today.year - datetime_series.dt.year
+"""
+
 if __name__ == "__main__":
     engine = create_engine(os.environ[f"MARIADB176_DSN1"])
 
