@@ -90,13 +90,13 @@ def _extract_json(repo: LiteRepository) -> None:
 
 
 def _exec_sql(repo: LiteRepository) -> None:
-    sql_text = "select * from json_doc"
+    sql_text = "select * from test_json_doc"
     r = repo.exec_sql(sql_text)
     logger.debug(sql_text)
     print(r)
     logger.debug("")
 
-    sql_text = "select json_extract(json_doc.doc, '$.name', '$.age') from json_doc"
+    sql_text = "select json_extract(doc, '$.name', '$.age') from test_json_doc"
     r = repo.exec_sql(sql_text)
     logger.debug(sql_text)
     print(r)
@@ -105,7 +105,7 @@ def _exec_sql(repo: LiteRepository) -> None:
 
 def _exec_json_extract(repo: LiteRepository) -> None:
     keys, record_list = repo.exec_json_extract(
-        "json_doc", "doc", ["$.name", "$.age", "$.car"]
+        "test_json_doc", "doc", ["$.name", "$.age", "$.car"]
     )
     logger.debug("exec_json_extract")
     logger.debug(f"  keys: {keys}")

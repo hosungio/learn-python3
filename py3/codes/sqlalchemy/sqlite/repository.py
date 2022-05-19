@@ -107,7 +107,7 @@ class LiteRepository:
 
     def extract_field_from_json(self, path: str) -> Tuple[str, list[Any]]:
         """
-        sqlite> select json_extract(json_doc.doc, '$.name') from json_doc;
+        sqlite> select json_extract(doc, '$.name') from test_json_doc;
         John
         """
         key = path[2:]
@@ -126,9 +126,9 @@ class LiteRepository:
         self, *paths: str
     ) -> Tuple[list[str], list[list[Any]]]:
         """
-        sqlite> select json_extract(doc, '$.name', '$.age') from json_doc;
+        sqlite> select json_extract(doc, '$.name', '$.age') from test_json_doc;
         ["John",30]
-        sqlite> select json_extract(doc, '$.age', '$.name') from json_doc;
+        sqlite> select json_extract(doc, '$.age', '$.name') from test_json_doc;
         [30,"John"]
         """
         keys = [p[2:] for p in paths]
