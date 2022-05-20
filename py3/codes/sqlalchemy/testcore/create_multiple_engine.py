@@ -7,8 +7,8 @@ if __name__ == "__main__":
     engine1 = create_engine(url)
     engine2 = create_engine(url)
 
-    print("engine1:", engine1)
-    print("engine2:", engine2)
+    print("engine1:", engine1.name, engine1)
+    print("engine2:", engine2.name, engine2)
 
     engine1.dispose()
     engine2.dispose()
