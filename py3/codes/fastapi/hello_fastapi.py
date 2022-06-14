@@ -1,6 +1,6 @@
+import enum
 import uvicorn
-import time
-import threading
+from typing import Optional
 from fastapi import FastAPI
 from loguru import logger
 
@@ -8,26 +8,31 @@ from loguru import logger
 app = FastAPI()
 
 
-@app.get("/")
-def get_root():
-    return "Hello World"
+@app.get("/jobs")
+def get_jobs(user: Optional[str] = None, name: Optional[str] = None) -> str:
+    rsp = f"Get jobs: user={user}, name={name}"
+    logger.info(rsp)
+    return rsp
 
 
-@app.get("/echo")
-def echo(msg: str, secs: int = 3):
-    """다른 AnyIO worker thread가 처리해서 각각 처리됨"""
-    logger.debug("echo:", threading.current_thread().name, threading.get_ident())
-    time.sleep(secs)
-    return msg
+@app.post("/jobs/{id}/start")
+def start(id: str) -> str:
+    logger.info(f"Start {id}")
+    return f"Start {id}"
 
 
-@app.get("/async-echo")
-async def async_echo(msg: str, secs: int = 3):
-    """같은 MainThread가 처리해서 이전 request가 완료되고 다음 request가 처리됨"""
-    logger.debug("async-echo:", threading.current_thread().name, threading.get_ident())
-    time.sleep(secs)
-    return msg
+@app.post("/jobs/{id}/stop")
+def stop(id: str) -> str:
+    logger.info(f"Stop {id}")
+    return f"Stop {id}"
 
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9090, reload=False)
+class TaskActionType(str, enum.Enum):
+    start = "start"
+    stop = "stop"
+
+
+@app.post("/tasks/{id}:{action}")
+def do_action(id: str, action: TaskActionType) -> str:
+    logger.info(f"Do: id={id}, action={action}")
+    return f"Do: id={id}, action={action}"
