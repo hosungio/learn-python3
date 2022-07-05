@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 alembic==1.6.5
 aniso8601==7.0.0
 anyio==3.6.1
@@ -6,6 +7,9 @@ attrs==21.4.0
 beautifulsoup4==4.11.1
 black==22.3.0
 bleach==5.0.0
+=======
+fastapi==0.77.1
+>>>>>>> 103eb11ac9e5addb566e0781795f7c1b7dddc58c
 certifi==2021.10.8
 charset-normalizer==2.0.12
 click==8.1.3
