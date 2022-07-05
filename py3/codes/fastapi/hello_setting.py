@@ -6,6 +6,7 @@ class HelloSettings(BaseSettings):
     app_name: str = "hello example"
     admin_email: str
     items_per_user: int = 50
+    foo: str = "foo"
 
     class Config:
         env_file = "hello_fastapi.env"
