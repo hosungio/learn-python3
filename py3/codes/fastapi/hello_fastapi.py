@@ -4,8 +4,15 @@ from typing import Optional
 from fastapi import FastAPI
 from loguru import logger
 
+from .hello_setting import get_hello_settings
+
 
 app = FastAPI()
+
+
+@app.get("/settings")
+def get_settings():
+    return get_hello_settings()
 
 
 @app.get("/jobs")
